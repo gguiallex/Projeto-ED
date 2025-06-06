@@ -16,6 +16,9 @@ struct Registro {
     char season[10];
 };
 
+//Teste de commit
+cout<<"Olá"<<endl;
+
 class MinHeap {
     private:
         dado* heap;
