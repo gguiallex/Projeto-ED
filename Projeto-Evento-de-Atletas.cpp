@@ -16,13 +16,13 @@ class Registro {
     char evento[100];
     char nacionalidade[10];
     public:
-    Registro(int i, char* n, char* c, char* e, char* ev, char* na);
+    Registro(int i, const char* n, const char* c, const char* e, const char* ev, const char* na);
     void escreverBinario(ofstream& out);
     void lerBinario(ifstream& in);
     static int tamanho();
 };
     //Construtor que serve tanto para criar um objeto vazio ou preencher.
-    Registro::Registro(int i = 0, char* n = "", char* c = "", char* e = "", char* ev = "", char* na = ""){
+    Registro::Registro(int i = 0, const char* n = "", const char* c = "", const char* e = "", const char* ev = "", const char* na = ""){
         id = i;
         strncpy(nome, n, sizeof(nome));
         strncpy(cidade, c, sizeof(cidade));
