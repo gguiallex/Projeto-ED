@@ -1,23 +1,112 @@
 //Adrielly Ferreira da Silva, Daniel de Jesus Moreira, Guilherme Alexandre Cunha Silva
 //Tema: Dados de Evento dos Atletas em crescente utilizando Merge MultiWay
 
-#include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
-struct Registro {
+class Registro {
+    private: 
     int id;
-    char name[50];
-    char team[50];
-    char games[20];
-    int year;
-    char season[10];
+    char nome[50];
+    char cidade[50];
+    char esporte[50];
+    char evento[100];
+    char nacionalidade[10];
+    public:
+    Registro(int i, char* n, char* c, char* e, char* ev, char* na);
+    void escreverBinario(ofstream& out);
+    void lerBinario(ifstream& in);
+    static int tamanho();
 };
+    //Construtor que serve tanto para criar um objeto vazio ou preencher.
+    Registro::Registro(int i = 0, char* n = "", char* c = "", char* e = "", char* ev = "", char* na = ""){
+        id = i;
+        strncpy(nome, n, sizeof(nome));
+        strncpy(cidade, c, sizeof(cidade));
+        strncpy(esporte, e, sizeof(esporte));
+        strncpy(evento, ev, sizeof(evento));
+        strncpy(nacionalidade, na, sizeof(nacionalidade));
 
-//Teste de commit
-cout<<"Olá"<<endl;
+        // Garantir que as strings sempre terminem com "\0" -> indica onde a string termina.
+        nome[sizeof(nome-1)] = '\0';
+        cidade[sizeof(nome-1)] = '\0';
+        esporte[sizeof(nome-1)] = '\0';
+        evento[sizeof(nome-1)] = '\0';
+        nacionalidade[sizeof(nome-1)] = '\0';
+    }
+
+        //Escrever um registro em binário.
+    void Registro::escreverBinario(ofstream& out){
+        out.write((char*)&id, sizeof(id));
+        out.write(nome, sizeof(nome));
+        out.write(cidade, sizeof(cidade));
+        out.write(esporte, sizeof(esporte));
+        out.write(evento, sizeof(evento));
+        out.write(nacionalidade, sizeof(nacionalidade));   
+    }
+
+        //Ler um registro em binário.
+    void Registro::lerBinario(ifstream& in){
+        in.read((char*)&id, sizeof(id));
+        in.read(nome, sizeof(nome));
+        in.read(cidade, sizeof(cidade));
+        in.read(esporte, sizeof(esporte));
+        in.read(evento, sizeof(evento));
+        in.read(nacionalidade, sizeof(nacionalidade));
+    }
+        //Retorna o tamanho fixo em bytes que um objeto da classe Registro ocupa quando armazenado em arquivo binário.
+    int Registro::tamanho(){
+        return sizeof(int) + sizeof(nome) + sizeof(cidade) + sizeof(esporte) + sizeof(evento) + sizeof(nacionalidade);
+    }
+
+    void converterCSVParaBinario(char* nomeCSV, char* nomeBinario){
+        ifstream arquivoCSV(nomeCSV);
+        ofstream arquivoBinario(nomeBinario);
+        bool erro = false;
+
+        if(!arquivoCSV.is_open()){
+            cerr<<"Erro ao abrir o arquivo CSV!";
+            erro = true;
+        }
+
+        if(!arquivoBinario.is_open()){
+            cerr<<"Erro ao abrir o arquivo binário!";
+            erro = true;
+        }
+
+        if(!erro){
+            string linha;
+            getline(arquivoCSV, linha); // Para ignorar o cabeçalho.
+
+            while(getline(arquivoCSV, linha)){
+                int id;
+                char nome[50], cidade[50], esporte[50], evento[100], nacionalidade[10];
+                int lidos = sscanf(linha.c_str(), "%d,%49[^,],%49[^,],%49[^,],%99[^,],%9[^,\n]", &id, nome, cidade, esporte, evento, nacionalidade);
+
+                if(lidos == 6){
+                    Registro reg(id, nome, cidade, esporte, evento, nacionalidade);
+                    reg.escreverBinario(arquivoBinario);
+                }
+
+                
+            }
+            std::cout<<"Conversão concluída com sucesso!";
+
+        }
+
+        arquivoCSV.close();
+        arquivoBinario.close();
+
+
+    }
+
+
+
+
+
 
 class MinHeap {
     private:
