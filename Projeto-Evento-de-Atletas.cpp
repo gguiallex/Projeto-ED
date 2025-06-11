@@ -8,8 +8,11 @@
 
 using namespace std;
 
+//Classe Resgistro
+
 class Registro
 {
+friend class manipuladorBinario;
 private:
     int id;
     char nome[50];
@@ -20,16 +23,10 @@ private:
 
 public:
     Registro(int i, const char *n, const char *c, const char *e, const char *ev, const char *na);
-    void escreverBinario(ofstream &out);
-    void lerBinario(ifstream &in);
+    void escreverBinario(ostream &out) const;
+    void lerBinario(istream &in);
+    void imprimirLinha() const;
     static int tamanho();
-
-    int getId() const { return id; }
-    const char* getNome() const { return nome; }
-    const char* getCidade() const { return cidade; }
-    const char* getEsporte() const { return esporte; }
-    const char* getEvento() const { return evento; }
-    const char* getNacionalidade() const { return nacionalidade; }
 };
 // Construtor que serve tanto para criar um objeto vazio ou preencher.
 Registro::Registro(int i = 0, const char *n = "", const char *c = "", const char *e = "", const char *ev = "", const char *na = "")
@@ -50,7 +47,7 @@ Registro::Registro(int i = 0, const char *n = "", const char *c = "", const char
 }
 
 // Escrever um registro em binário.
-void Registro::escreverBinario(ofstream &out)
+void Registro::escreverBinario(ostream &out) const
 {
     out.write((char *)&id, sizeof(id));
     out.write(nome, sizeof(nome));
@@ -61,7 +58,7 @@ void Registro::escreverBinario(ofstream &out)
 }
 
 // Ler um registro em binário.
-void Registro::lerBinario(ifstream &in)
+void Registro::lerBinario(istream &in) 
 {
     in.read((char *)&id, sizeof(id));
     in.read(nome, sizeof(nome));
@@ -70,11 +67,201 @@ void Registro::lerBinario(ifstream &in)
     in.read(evento, sizeof(evento));
     in.read(nacionalidade, sizeof(nacionalidade));
 }
+
+//Imprime uma linha do arquivo binário.
+void Registro::imprimirLinha() const {
+    cout << "ID: " << id << " | "
+         << "Nome: " << nome << " | "
+         << "Cidade: " << cidade << " | "
+         << "Esporte: " << esporte << " | "
+         << "Evento: " << evento << " | "
+         << "Nacionalidade: " << nacionalidade << endl;
+}
+
 // Retorna o tamanho fixo em bytes que um objeto da classe Registro ocupa quando armazenado em arquivo binário.
 int Registro::tamanho()
 {
     return sizeof(int) + sizeof(nome) + sizeof(cidade) + sizeof(esporte) + sizeof(evento) + sizeof(nacionalidade);
 }
+
+//Classe manipuladorBinario
+
+class manipuladorBinario{
+    private:
+    string nomeArquivo;
+    public:
+    manipuladorBinario(string nome);
+    void alterarRegistroNaPosicao(int posicao, const Registro& novo);
+    void trocarRegistros(int pos1, int pos2);
+    void inserir();
+    void visualizarEntre();
+    void imprimirTodos();
+
+
+};
+
+manipuladorBinario::manipuladorBinario(string nome){
+    nomeArquivo = nome;
+
+}
+
+void manipuladorBinario::alterarRegistroNaPosicao(int posicao, const Registro& novo){
+    fstream arquivo(nomeArquivo.c_str(), ios::in | ios::out | ios::binary);
+    if(!arquivo.is_open()){
+        cerr<<"Erro ao abrir o arquivo binário para alteração!";
+    }
+    else{
+        int offset = posicao * Registro::tamanho();
+        arquivo.seekp(offset, ios::beg);
+        novo.escreverBinario(arquivo);
+        arquivo.close();
+    }
+
+}
+
+void manipuladorBinario::trocarRegistros(int pos1, int pos2) {
+    fstream arquivo(nomeArquivo.c_str(), ios::in | ios::out | ios::binary);
+    if (!arquivo.is_open()) {
+        cerr << "Erro ao abrir o arquivo binário para troca!" << endl;
+    } else {
+        Registro reg1, reg2;
+
+        arquivo.seekg(pos1 * Registro::tamanho(), ios::beg);
+        reg1.lerBinario(arquivo);
+
+        arquivo.seekg(pos2 * Registro::tamanho(), ios::beg);
+        reg2.lerBinario(arquivo);
+
+        arquivo.seekp(pos1 * Registro::tamanho(), ios::beg);
+        reg2.escreverBinario(arquivo);
+
+        arquivo.seekp(pos2 * Registro::tamanho(), ios::beg);
+        reg1.escreverBinario(arquivo);
+
+        arquivo.close();
+        }
+    }
+
+void manipuladorBinario::inserir() {
+    ofstream out(nomeArquivo.c_str(), ios::binary | ios::app);
+    bool sucesso = true;
+    if (!out) {
+        cerr << "Erro ao abrir o arquivo binário para escrita." << endl;
+        sucesso = false;
+    } 
+
+    if(sucesso){
+    int id;
+    char nome[50], cidade[50], esporte[50], evento[100], nacionalidade[10];
+
+    cout << "Digite o ID: ";
+    cin >> id;
+    cin.ignore(); // limpar o buffer
+
+    cout << "Nome: ";
+    cin.getline(nome, 50);
+
+    cout << "Cidade: ";
+    cin.getline(cidade, 50);
+    
+    cout << "Esporte: ";
+    cin.getline(esporte, 50);
+
+    cout << "Evento: ";
+    cin.getline(evento, 100);
+
+    cout << "Nacionalidade: ";
+    cin.getline(nacionalidade, 10);
+
+    Registro reg(id, nome, cidade, esporte, evento, nacionalidade);
+    reg.escreverBinario(out);
+
+    cout << "Registro inserido com sucesso." << endl;
+    out.close();
+    }
+}
+
+void manipuladorBinario::visualizarEntre() {
+    bool sucesso = true;
+    ifstream in(nomeArquivo.c_str(), ios::binary);
+
+    if (!in) {
+        cerr << "Erro ao abrir o arquivo binário." << endl;
+        sucesso = false;
+    }
+
+    int inicio = 0, fim = 0;
+    if (sucesso) {
+        cout << "Digite a posição inicial (0-based): ";
+        cin >> inicio;
+        cout << "Digite a posição final: ";
+        cin >> fim;
+
+        if (inicio > fim || inicio < 0) {
+            cout << "Intervalo inválido!" << endl;
+            sucesso = false;
+        }
+    }
+
+    if (sucesso) {
+        Registro reg;
+        int posAtual = 0;
+        bool terminou = false;
+
+        while (in.read((char*)&reg, Registro::tamanho()) && !terminou) {
+            if (posAtual >= inicio && posAtual <= fim) {
+                cout << "Posição: " << posAtual << " | ";
+                reg.imprimirLinha();
+            }
+            posAtual++;
+
+            if (posAtual > fim) {
+                terminou = true;
+            }
+        }
+
+        if (posAtual <= inicio) {
+            cout << "Faixa fora do tamanho do arquivo." << endl;
+        }
+    }
+
+    if (in.is_open()) {
+        in.close();
+    }
+}
+
+void manipuladorBinario::imprimirTodos() {
+    ifstream in(nomeArquivo.c_str(), ios::binary);
+    bool leituraOk = true;
+
+    if (!in) {
+        cerr << "Erro ao abrir o arquivo binário." << endl;
+        leituraOk = false;
+    }
+
+    if (leituraOk) {
+        Registro reg;
+        int pos = 0;
+
+        reg.lerBinario(in);
+        while (!in.eof() && !in.fail()) {
+            cout << "Posição: " << pos << " | ";
+            reg.imprimirLinha();
+
+            reg.lerBinario(in);
+            pos++;
+        }
+
+        if (in.is_open()) {
+            in.close();
+        }
+    }
+}
+
+
+
+
+
 
 void converterCSVParaBinario(char *nomeCSV, char *nomeBinario)
 {
@@ -118,81 +305,10 @@ void converterCSVParaBinario(char *nomeCSV, char *nomeBinario)
     arquivoBinario.close();
 }
 
-void inserir(const char* nomeArquivo) {
-    ofstream out(nomeArquivo, ios::binary | ios::app);
-    if (!out) {
-        cerr << "Erro ao abrir o arquivo binário para escrita." << endl;
-        return;
-    } 
 
-    int id;
-    char nome[50], cidade[50], esporte[50], evento[100], nacionalidade[10];
 
-    cout << "Digite o ID: ";
-    cin >> id;
-    cin.ignore(); // limpar o buffer
 
-    cout << "Nome: ";
-    cin.getline(nome, 50);
 
-    cout << "Cidade: ";
-    cin.getline(cidade, 50);
-    
-    cout << "Esporte: ";
-    cin.getline(evento, 100);
-
-    cout << "Nacionalidade: ";
-    cin.getline(nacionalidade, 10);
-
-    Registro reg(id, nome, cidade, esporte, evento, nacionalidade);
-    reg.escreverBinario(out);
-
-    cout << "Registro inserido com sucesso." << endl;
-    out.close();
-}
-
-void visualizarEntre(const char* nomeArquivo) {
-    ifstream in(nomeArquivo, ios::binary);
-    if(!in) {
-        cerr << "Erro ao abrir o arquivo binário." << endl;
-        return;
-    }
-
-    int inicio, fim;
-    cout << "Digite a posi;áo inicial (0-based): ";
-    cin >> inicio;
-    cout << "Digite a posição final: ";
-    cin >> fim;
-
-    if(inicio > fim || inicio < 0) {
-        cout << "Intervalo inválido!" << endl;
-        return;
-    }
-
-    Registro reg;
-    int posAtual = 0;
-
-    while(in.read((char*)&reg, Registro::tamanho())) {
-        if(posAtual >= inicio && posAtual <= fim) {
-            cout << "--------------------------" << endl;
-            cout << "Posição: " << posAtual << endl;
-            cout << "ID: " << reg.getId() << endl;
-            cout << "Nome: " << reg.getNome() << endl;
-            cout << "Cidade: " << reg.getCidade() << endl;
-            cout << "Esporte: " << reg.getEsporte() << endl;
-            cout << "Evento: " << reg.getEvento() << endl;
-            cout << "Nacionalidade: " << reg.getNacionalidade() << endl;
-        }
-        posAtual++;
-        if(posAtual > fim) break;
-    }
-
-    if(posAtual <= inicio) {
-        cout << "Faixa fora do tamanho do arquivo." << endl;
-    }
-
-    in.close();
-}
 
 class MinHeap
 {
@@ -228,7 +344,6 @@ void Menu()
 
 int main()
 {
-
     converterCSVParaBinario("data_athlete_event.csv", "dados.bin");
 
     int numero;
@@ -242,12 +357,12 @@ int main()
         {
         case 1:
         {
-            inserir("dados.bin");
+            //inserir();
             break;
         }
         case 2:
         {
-            visualizarEntre("dados.bin");
+            //visualizarEntre();
             break;
         }
         case 3:
