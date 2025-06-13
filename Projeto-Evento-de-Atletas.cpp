@@ -8,7 +8,7 @@
 
 using namespace std;
 
-//Classe Resgistro
+//Classe Registro
 
 class Registro
 {
@@ -26,6 +26,7 @@ public:
     void escreverBinario(ostream &out) const;
     void lerBinario(istream &in);
     void imprimirLinha() const;
+    void lerTeclado();
     static int tamanho();
 };
 // Construtor que serve tanto para criar um objeto vazio ou preencher.
@@ -78,6 +79,24 @@ void Registro::imprimirLinha() const {
          << "Nacionalidade: " << nacionalidade << endl;
 }
 
+void Registro::lerTeclado() {
+    cout << "Digite o ID: ";
+    cin >> id;
+    cin.ignore();
+
+    cout << "Nome: ";
+    cin.getline(nome, 50);
+    cout << "Cidade: ";
+    cin.getline(cidade, 50);
+    cout << "Esporte: ";
+    cin.getline(esporte, 50);
+    cout << "Evento: ";
+    cin.getline(evento, 100);
+    cout << "Nacionalidade: ";
+    cin.getline(nacionalidade, 10);
+}
+
+
 // Retorna o tamanho fixo em bytes que um objeto da classe Registro ocupa quando armazenado em arquivo binário.
 int Registro::tamanho()
 {
@@ -93,9 +112,10 @@ class manipuladorBinario{
     manipuladorBinario(string nome);
     void alterarRegistroNaPosicao(int posicao, const Registro& novo);
     void trocarRegistros(int pos1, int pos2);
-    void inserir();
+    void inserir(int posicao);
     void visualizarEntre();
     void imprimirTodos();
+    void converterCsvParaBinario(char* nomeCsv, char* nomeBinario);
 
 
 };
@@ -142,43 +162,53 @@ void manipuladorBinario::trocarRegistros(int pos1, int pos2) {
         }
     }
 
-void manipuladorBinario::inserir() {
-    ofstream out(nomeArquivo.c_str(), ios::binary | ios::app);
-    bool sucesso = true;
-    if (!out) {
-        cerr << "Erro ao abrir o arquivo binário para escrita." << endl;
+void manipuladorBinario::inserir(int posicao) {
+    Registro novoRegistro;
+    novoRegistro.lerTeclado();
+    bool sucesso = true; 
+
+    fstream arquivo(nomeArquivo.c_str(), ios::in | ios::out | ios::binary);
+    if (!arquivo.is_open()) {
+        cerr << "Erro ao abrir o arquivo binário para inserção!" << endl;
         sucesso = false;
-    } 
+    }
 
     if(sucesso){
-    int id;
-    char nome[50], cidade[50], esporte[50], evento[100], nacionalidade[10];
-
-    cout << "Digite o ID: ";
-    cin >> id;
-    cin.ignore(); // limpar o buffer
-
-    cout << "Nome: ";
-    cin.getline(nome, 50);
-
-    cout << "Cidade: ";
-    cin.getline(cidade, 50);
-    
-    cout << "Esporte: ";
-    cin.getline(esporte, 50);
-
-    cout << "Evento: ";
-    cin.getline(evento, 100);
-
-    cout << "Nacionalidade: ";
-    cin.getline(nacionalidade, 10);
-
-    Registro reg(id, nome, cidade, esporte, evento, nacionalidade);
-    reg.escreverBinario(out);
-
-    cout << "Registro inserido com sucesso." << endl;
-    out.close();
+    arquivo.seekg(0, ios::end); 
+    long long tamanhoArquivo = arquivo.tellg(); 
+    int numRegistros = 0;
+    if (tamanhoArquivo > 0) { 
+        numRegistros = tamanhoArquivo / Registro::tamanho();
     }
+
+    if (posicao < 0 || posicao > numRegistros) {
+        cout << "Posição inválida. A posição deve estar entre 0 e " << numRegistros << "." << endl;
+        arquivo.close();
+        return;
+    }
+
+    if (posicao == numRegistros) {
+        arquivo.seekp(0, ios::end); 
+        novoRegistro.escreverBinario(arquivo); 
+        cout << "Registro inserido no final do arquivo." << endl;
+    } else { 
+        
+        Registro tempReg;
+        for (int i = numRegistros - 1; i >= posicao; --i) {
+            arquivo.seekg(i * Registro::tamanho(), ios::beg); 
+            tempReg.lerBinario(arquivo); 
+
+            arquivo.seekp((i + 1) * Registro::tamanho(), ios::beg); 
+            tempReg.escreverBinario(arquivo); 
+        }
+
+        arquivo.seekp(posicao * Registro::tamanho(), ios::beg);
+        novoRegistro.escreverBinario(arquivo);
+        cout << "Registro inserido na posição " << posicao << " com sucesso." << endl;
+    }
+}
+
+    arquivo.close(); 
 }
 
 void manipuladorBinario::visualizarEntre() {
@@ -258,57 +288,63 @@ void manipuladorBinario::imprimirTodos() {
     }
 }
 
+void manipuladorBinario::converterCsvParaBinario(char* nomeCsv, char* nomeBinario) {
+    ifstream csv(nomeCsv);
+    ofstream bin(nomeBinario, ios::binary);
+    bool sucesso = true;
 
-
-
-
-
-void converterCSVParaBinario(char *nomeCSV, char *nomeBinario)
-{
-    ifstream arquivoCSV(nomeCSV);
-    ofstream arquivoBinario(nomeBinario);
-    bool erro = false;
-
-    if (!arquivoCSV.is_open())
-    {
-        cerr << "Erro ao abrir o arquivo CSV!";
-        erro = true;
+    if (!csv || !bin) {
+        cout << "Erro ao abrir os arquivos." << endl;
+        sucesso = false;
     }
 
-    if (!arquivoBinario.is_open())
-    {
-        cerr << "Erro ao abrir o arquivo binário!";
-        erro = true;
-    }
+    if(sucesso){
 
-    if (!erro)
-    {
-        string linha;
-        getline(arquivoCSV, linha); // Para ignorar o cabeçalho.
+    string linha;
+    getline(csv, linha); 
 
-        while (getline(arquivoCSV, linha))
-        {
-            int id;
-            char nome[50], cidade[50], esporte[50], evento[100], nacionalidade[10];
-            int lidos = sscanf(linha.c_str(), "%d,%49[^,],%49[^,],%49[^,],%99[^,],%9[^,\n]", &id, nome, cidade, esporte, evento, nacionalidade);
+    while (getline(csv, linha)) {
+    string campos[6];
+    int campoAtual = 0;
+    string campoTemporario = "";
+    bool dentroDeAspas = false;
 
-            if (lidos == 6)
-            {
-                Registro reg(id, nome, cidade, esporte, evento, nacionalidade);
-                reg.escreverBinario(arquivoBinario);
-            }
+    for (size_t i = 0; i < linha.length(); i++) {
+        char c = linha[i];
+
+        if (c == '"') {
+            dentroDeAspas = !dentroDeAspas; 
+            campoTemporario += c; 
+        } else if (c == ',' && !dentroDeAspas && campoAtual < 5) {
+            campos[campoAtual++] = campoTemporario;
+            campoTemporario = "";
+        } else {
+            campoTemporario += c;
         }
-        std::cout << "Conversão concluída com sucesso!";
     }
 
-    arquivoCSV.close();
-    arquivoBinario.close();
+    campos[5] = campoTemporario; 
+
+    Registro r;
+    r.id = stoi(campos[0]);
+
+    memset(r.nome, 0, sizeof(r.nome));
+    memset(r.cidade, 0, sizeof(r.cidade));
+    memset(r.esporte, 0, sizeof(r.esporte));
+    memset(r.evento, 0, sizeof(r.evento));
+    memset(r.nacionalidade, 0, sizeof(r.nacionalidade));
+
+    strncpy(r.nome, campos[1].c_str(), sizeof(r.nome) - 1);
+    strncpy(r.cidade, campos[2].c_str(), sizeof(r.cidade) - 1);
+    strncpy(r.esporte, campos[3].c_str(), sizeof(r.esporte) - 1);
+    strncpy(r.evento, campos[4].c_str(), sizeof(r.evento) - 1);
+    strncpy(r.nacionalidade, campos[5].c_str(), sizeof(r.nacionalidade) - 1);
+
+    r.escreverBinario(bin);
 }
 
-
-
-
-
+}
+}
 
 class MinHeap
 {
@@ -337,14 +373,14 @@ void Menu()
     cout << "2 - Visualizar Entre" << endl;
     cout << "3 - Alterar" << endl;
     cout << "4 - Trocar Posição" << endl;
-    cout << "5 - Ordernar" << endl;
+    cout << "5 - Ordenar" << endl;
     cout << "6 - Imprimir todos os Registros" << endl;
     cout << "0 - Encerrar o Programa" << endl;
 }
 
 int main()
 {
-    converterCSVParaBinario("data_athlete_event.csv", "dados.bin");
+    //converterCSVParaBinario("data_athlete_event.csv", "dados.bin");
 
     int numero;
     do
