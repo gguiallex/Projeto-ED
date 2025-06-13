@@ -264,7 +264,7 @@ void manipuladorBinario::imprimirTodos() {
     ifstream in(nomeArquivo.c_str(), ios::binary);
     bool leituraOk = true;
 
-    if (!in) {
+    if (!in.is_open()) {
         cerr << "Erro ao abrir o arquivo binário." << endl;
         leituraOk = false;
     }
@@ -273,18 +273,16 @@ void manipuladorBinario::imprimirTodos() {
         Registro reg;
         int pos = 0;
 
+    reg.lerBinario(in);
+    while (in) {
+        cout << "Posição: " << pos << " | ";
+        reg.imprimirLinha();
+        pos++;
         reg.lerBinario(in);
-        while (!in.eof() && !in.fail()) {
-            cout << "Posição: " << pos << " | ";
-            reg.imprimirLinha();
-
-            reg.lerBinario(in);
-            pos++;
         }
 
-        if (in.is_open()) {
-            in.close();
-        }
+    
+        in.close();
     }
 }
 
