@@ -5,14 +5,21 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cstdio>
 
 using namespace std;
+
+// Define a quantidade máxima de buffer para ser usado na classe de ordenação
+const int MAX_RUNS = 100;
+const int MAX_HEAP = MAX_RUNS;
+const int MAX_BUFFER = 1000;
 
 //Classe Registro
 
 class Registro
 {
 friend class manipuladorBinario;
+friend class MinHeap;
 private:
     int id;
     char nome[50];
@@ -24,10 +31,11 @@ private:
 public:
     Registro(int i, const char *n, const char *c, const char *e, const char *ev, const char *na);
     void escreverBinario(ostream &out) const;
-    void lerBinario(istream &in);
+    bool lerBinario(istream &in);
     void imprimirLinha() const;
     void lerTeclado();
     static int tamanho();
+    int obterId() const {return id;}
 };
 // Construtor que serve tanto para criar um objeto vazio ou preencher.
 Registro::Registro(int i = 0, const char *n = "", const char *c = "", const char *e = "", const char *ev = "", const char *na = "")
@@ -59,7 +67,7 @@ void Registro::escreverBinario(ostream &out) const
 }
 
 // Ler um registro em binário.
-void Registro::lerBinario(istream &in) 
+bool Registro::lerBinario(istream &in) 
 {
     in.read((char *)&id, sizeof(id));
     in.read(nome, sizeof(nome));
@@ -67,6 +75,7 @@ void Registro::lerBinario(istream &in)
     in.read(esporte, sizeof(esporte));
     in.read(evento, sizeof(evento));
     in.read(nacionalidade, sizeof(nacionalidade));
+    return in.gcount()>0;
 }
 
 //Imprime uma linha do arquivo binário.
@@ -115,7 +124,7 @@ class manipuladorBinario{
     void inserir(int posicao);
     void visualizarEntre();
     void imprimirTodos();
-    void converterCsvParaBinario(char* nomeCsv, char* nomeBinario);
+    void converterCsvParaBinario(char* nomeCsv, const char* nomeBinario);
 
 
 };
@@ -286,7 +295,7 @@ void manipuladorBinario::imprimirTodos() {
     }
 }
 
-void manipuladorBinario::converterCsvParaBinario(char* nomeCsv, char* nomeBinario) {
+void manipuladorBinario::converterCsvParaBinario(char* nomeCsv,const char* nomeBinario) {
     ifstream csv(nomeCsv);
     ofstream bin(nomeBinario, ios::binary);
     bool sucesso = true;
@@ -344,7 +353,7 @@ void manipuladorBinario::converterCsvParaBinario(char* nomeCsv, char* nomeBinari
 }
 }
 
-class MinHeap
+/*class MinHeap
 {
 private:
     Registro *heap;
@@ -363,6 +372,155 @@ public:
     Registro retiraRaiz();
     void insere(Registro d);
 };
+*/
+
+//Cria os nós a serem inseridos no minHeap
+struct HeapItem {
+    Registro reg;
+    int origem;
+};
+
+//MinHeap usado na ordennação externa
+class MinHeap {
+private:
+    HeapItem dados[MAX_HEAP];
+    int tamanho;
+
+    void corrigeSubindo(int i) {
+        while (i > 0) {
+            int pai = (i - 1) / 2;
+            if (dados[i].reg.id < dados[pai].reg.id) {
+                swap(dados[i], dados[pai]);
+                i = pai;
+            } else {
+                break;
+            }
+        }
+    }
+
+    void corrigeDescendo(int i) {
+        while (2 * i + 1 < tamanho) {
+            int filhoEsq = 2 * i + 1;
+            int filhoDir = 2 * i + 2;
+            int menor = i;
+
+            if (filhoEsq < tamanho && dados[filhoEsq].reg.id < dados[menor].reg.id)
+                menor = filhoEsq;
+            if (filhoDir < tamanho && dados[filhoDir].reg.id < dados[menor].reg.id)
+                menor = filhoDir;
+
+            if (menor != i) {
+                swap(dados[i], dados[menor]);
+                i = menor;
+            } else {
+                break;
+            }
+        }
+    }
+
+public:
+    MinHeap() : tamanho(0) {}
+
+    void inserir(const HeapItem& item) {
+        if (tamanho < MAX_HEAP) {
+            dados[tamanho] = item;
+            corrigeSubindo(tamanho);
+            tamanho++;
+        }
+    }
+
+    HeapItem extrairMinimo() {
+        HeapItem raiz = dados[0];
+        dados[0] = dados[--tamanho];
+        corrigeDescendo(0);
+        return raiz;
+    }
+
+    bool vazio() const {
+        return tamanho == 0;
+    }
+};
+
+void ordenarMergeMultiway(const string& nomeEntrada, const string& nomeSaida, int bufferSize = MAX_BUFFER) {
+    ifstream in(nomeEntrada.c_str(), ios::binary);
+    if (!in) {
+        cerr << "Erro ao abrir arquivo binário de entrada!" << endl;
+        return;
+    }
+
+    char nomesTemporarios[MAX_RUNS][20];
+    int totalRuns = 0;
+
+    while (!in.eof()) {
+        Registro buffer[MAX_BUFFER];
+        int lidos = 0;
+        Registro temp;
+
+        while (lidos < bufferSize && temp.lerBinario(in)) {
+            buffer[lidos++] = temp;
+        }
+
+        if (lidos == 0) break;
+
+        // Ordenação simples por inserção
+        for (int i = 1; i < lidos; ++i) {
+            Registro chave = buffer[i];
+            int j = i - 1;
+            while (j >= 0 && buffer[j].obterId() > chave.obterId()) {
+                buffer[j + 1] = buffer[j];
+                j--;
+            }
+            buffer[j + 1] = chave;
+        }
+
+        sprintf(nomesTemporarios[totalRuns], "run%d.bin", totalRuns);
+        ofstream out(nomesTemporarios[totalRuns], ios::binary);
+        for (int i = 0; i < lidos; ++i) {
+            buffer[i].escreverBinario(out);
+        }
+        out.close();
+        totalRuns++;
+    }
+    in.close();
+
+    ofstream saida(nomeSaida.c_str(), ios::binary);
+    if (!saida) {
+        cerr << "Erro ao abrir arquivo de saída!" << endl;
+        return;
+    }
+
+    MinHeap heap;
+    ifstream arquivos[MAX_RUNS];
+
+    for (int i = 0; i < totalRuns; ++i) {
+        arquivos[i].open(nomesTemporarios[i], ios::binary);
+        Registro r;
+        if (arquivos[i].is_open() && r.lerBinario(arquivos[i])) {
+            HeapItem item = {r, i};
+            heap.inserir(item);
+        }
+    }
+
+    while (!heap.vazio()) {
+        HeapItem menor = heap.extrairMinimo();
+        menor.reg.escreverBinario(saida);
+
+        Registro proximo;
+        if (arquivos[menor.origem].is_open() && proximo.lerBinario(arquivos[menor.origem])) {
+            HeapItem item = {proximo, menor.origem};
+            heap.inserir(item);
+        }
+    }
+
+    for (int i = 0; i < totalRuns; ++i) {
+        if (arquivos[i].is_open()) arquivos[i].close();
+        remove(nomesTemporarios[i]);
+    }
+
+    saida.close();
+    cout << "Ordenação finalizada. Arquivo gerado: " << nomeSaida << endl;
+}
+
 
 void Menu()
 {
@@ -378,7 +536,8 @@ void Menu()
 
 int main()
 {
-    //converterCSVParaBinario("data_athlete_event.csv", "dados.bin");
+    manipuladorBinario m("data_athlete_event.csv");
+    m.converterCsvParaBinario("data_athlete_event.csv", "dados.bin");
 
     int numero;
     do
@@ -391,32 +550,35 @@ int main()
         {
         case 1:
         {
-            //inserir();
+            int pos;
+            cout << "Informe a posição para inserir: ";
+            cin >> pos;
+            m.inserir(pos);
             break;
         }
         case 2:
         {
-            //visualizarEntre();
+            m.visualizarEntre();
             break;
         }
         case 3:
         {
-            //alterarRegistro("dados.bin");
+           // m.alterarRegistroNaPosicao("dados.bin");
             break;
         }
         case 4:
         {
-            //trocarRegistros("dados.bin");
+           // m.trocarRegistros("dados.bin");
             break;
         }
         case 5:
         {
-            //ordenarArquivoComMergeMultiway("dados.bin", "ordenado.bin");
+            //m.ordenarArquivoComMergeMultiway("dados.bin", "ordenado.bin");
             break;
         }
         case 6:
         {
-            //imprimirTodos("dados.bin");
+            //m.imprimirTodos("dados.bin");
             break;
         }
         case 0:
