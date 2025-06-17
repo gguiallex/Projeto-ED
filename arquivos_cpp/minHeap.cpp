@@ -1,4 +1,4 @@
-#include "cabecalhos/minheap.h"
+#include "minheap.h"
 
 
 MinHeap::MinHeap() : tamanho(0) {}

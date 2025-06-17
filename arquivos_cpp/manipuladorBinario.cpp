@@ -1,5 +1,5 @@
-#include "cabecalhos/manipuladorBinario.h"
-#include "cabecalhos/minHeap.h"
+#include "manipuladorBinario.h"
+#include "minHeap.h"
 
 manipuladorBinario::manipuladorBinario(string nome) {
     nomeArquivo = nome;

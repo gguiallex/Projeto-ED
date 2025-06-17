@@ -1,4 +1,4 @@
-#include "cabecalhos/registro.h"
+#include "registro.h"
 
 Registro::Registro(int i, const char *n, const char *c, const char *e, const char *ev, const char *na) {
     id = i;
