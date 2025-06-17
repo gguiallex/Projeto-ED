@@ -550,6 +550,8 @@ int main() {
         }
         case 5:{
             ordenarMergeMultiway("dados.bin", "ordenado.bin");
+            remove("dados.bin");
+            rename("ordenado.bin", "dados.bin");
             break;
         }
         case 6:{
