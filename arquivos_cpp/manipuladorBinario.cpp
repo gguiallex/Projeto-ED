@@ -6,39 +6,50 @@ manipuladorBinario::manipuladorBinario(string nome) {
 }
 
 void manipuladorBinario::alterarRegistroNaPosicao(int posicao, const Registro &novo) {
+    bool sucesso = true;
+
     fstream arquivo(nomeArquivo.c_str(), ios::in | ios::out | ios::binary);
     if (!arquivo.is_open()) {
-        cerr << "Erro ao abrir o arquivo binário para alteração!";
-        return;
+        cerr << "Erro ao abrir o arquivo binário para alteração!" << endl;
+        sucesso = false;
     }
-    int offset = posicao * Registro::tamanho();
-    arquivo.seekp(offset, ios::beg);
-    novo.escreverBinario(arquivo);
-    arquivo.close();
+
+    if (sucesso) {
+        int offset = posicao * Registro::tamanho();
+        arquivo.seekp(offset, ios::beg);
+        novo.escreverBinario(arquivo);
+        arquivo.close();
+    }
 }
 
+
 void manipuladorBinario::trocarRegistros(int pos1, int pos2) {
+    bool sucesso = true;
     fstream arquivo(nomeArquivo.c_str(), ios::in | ios::out | ios::binary);
     if (!arquivo.is_open()) {
         cerr << "Erro ao abrir o arquivo binário para troca!" << endl;
-        return;
+        sucesso = false;
     }
-    Registro reg1, reg2;
 
-    arquivo.seekg(pos1 * Registro::tamanho(), ios::beg);
-    reg1.lerBinario(arquivo);
+    if (sucesso) {
+        Registro reg1, reg2;
 
-    arquivo.seekg(pos2 * Registro::tamanho(), ios::beg);
-    reg2.lerBinario(arquivo);
+        arquivo.seekg(pos1 * Registro::tamanho(), ios::beg);
+        reg1.lerBinario(arquivo);
 
-    arquivo.seekp(pos1 * Registro::tamanho(), ios::beg);
-    reg2.escreverBinario(arquivo);
+        arquivo.seekg(pos2 * Registro::tamanho(), ios::beg);
+        reg2.lerBinario(arquivo);
 
-    arquivo.seekp(pos2 * Registro::tamanho(), ios::beg);
-    reg1.escreverBinario(arquivo);
+        arquivo.seekp(pos1 * Registro::tamanho(), ios::beg);
+        reg2.escreverBinario(arquivo);
 
-    arquivo.close();
+        arquivo.seekp(pos2 * Registro::tamanho(), ios::beg);
+        reg1.escreverBinario(arquivo);
+
+        arquivo.close();
+    }
 }
+
 
 void manipuladorBinario::inserir(int posicao) {
     Registro novoRegistro;
@@ -93,62 +104,75 @@ void manipuladorBinario::inserir(int posicao) {
 }
 
 void manipuladorBinario::visualizarEntre() {
+    bool sucesso = true;
     ifstream in(nomeArquivo.c_str(), ios::binary);
     if (!in) {
         cerr << "Erro ao abrir o arquivo binário." << endl;
-        return;
+        sucesso = false;
     }
 
     int inicio = 0, fim = 0;
-    cout << "Digite a posição inicial (0-based): ";
-    cin >> inicio;
-    cout << "Digite a posição final: ";
-    cin >> fim;
+    if (sucesso) {
+        cout << "Digite a posição inicial (0-based): ";
+        cin >> inicio;
+        cout << "Digite a posição final: ";
+        cin >> fim;
 
-    if (inicio > fim || inicio < 0) {
-        cout << "Intervalo inválido!" << endl;
-        in.close();
-        return;
-    }
-
-    Registro reg;
-    int posAtual = 0;
-
-    while (in.read((char *)&reg, Registro::tamanho()) && posAtual <= fim) {
-        if (posAtual >= inicio) {
-            cout << "Posição: " << posAtual << " | ";
-            reg.imprimirLinha();
+        if (inicio > fim || inicio < 0) {
+            cout << "Intervalo inválido!" << endl;
+            sucesso = false;
         }
-        posAtual++;
     }
 
-    if (posAtual <= inicio) {
-        cout << "Faixa fora do tamanho do arquivo." << endl;
+    if (sucesso) {
+        Registro reg;
+        int posAtual = 0;
+
+        while (in.read((char *)&reg, Registro::tamanho()) && posAtual <= fim) {
+            if (posAtual >= inicio) {
+                cout << "Posição: " << posAtual << " | ";
+                reg.imprimirLinha();
+            }
+            posAtual++;
+        }
+
+        if (posAtual <= inicio) {
+            cout << "Faixa fora do tamanho do arquivo." << endl;
+        }
     }
 
-    in.close();
+    if (in.is_open()) {
+        in.close();
+    }
 }
 
+
 void manipuladorBinario::imprimirTodos() {
+    bool sucesso = true;
     ifstream in(nomeArquivo.c_str(), ios::binary);
     if (!in.is_open()) {
         cerr << "Erro ao abrir o arquivo binário." << endl;
-        return;
+        sucesso = false;
     }
 
-    Registro reg;
-    int pos = 0;
+    if (sucesso) {
+        Registro reg;
+        int pos = 0;
 
-    reg.lerBinario(in);
-    while (in) {
-        cout << "Posição: " << pos << " | ";
-        reg.imprimirLinha();
-        pos++;
         reg.lerBinario(in);
+        while (in) {
+            cout << "Posição: " << pos << " | ";
+            reg.imprimirLinha();
+            pos++;
+            reg.lerBinario(in);
+        }
     }
 
-    in.close();
+    if (in.is_open()) {
+        in.close();
+    }
 }
+
 
 void manipuladorBinario::converterCsvParaBinario(char* nomeCsv,const char* nomeBinario) {
     ifstream csv(nomeCsv);
