@@ -1,6 +1,5 @@
 #include "manipuladorBinario.h"
 #include "minHeap.h"
-#include <limits>
 
 manipuladorBinario::manipuladorBinario(string nome) {
     nomeArquivo = nome;
@@ -149,70 +148,79 @@ void manipuladorBinario::visualizarEntre() {
 
 
 void manipuladorBinario::imprimirTodos() {
-    bool sucesso = true;
     ifstream in(nomeArquivo.c_str(), ios::binary);
     if (!in.is_open()) {
         cerr << "Erro ao abrir o arquivo binario." << endl;
-        sucesso = false;
+        return;
     }
 
-    if (sucesso) {
+    int opcao = -1;
+
+    // Loop de escolha da opção
+    do {
         cout << "Deseja exibir:\n1 - Por partes\n2 - Tudo\n0 - Voltar ao menu\nEscolha: ";
-        int opcao;
         cin >> opcao;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // limpa buffer
 
-        if (opcao == 0) return;
+        // Limpa buffer após entrada inválida ou sobras
+        cin.clear();
+        while (cin.get() != '\n'); // consome até o ENTER
 
-        Registro reg;
-        int pos = 0;
+        if (opcao < 0 || opcao > 2) {
+            cout << "Opcao invalida. Tente novamente.\n";
+        }
+    } while (opcao < 0 || opcao > 2);
 
-        if (opcao == 1) {
-            int registrosPorPagina = 30;
-            int contador = 0;
+    if (opcao == 0) {
+        cout << "Retornando ao menu...\n";
+        in.close();
+        return;
+    }
 
-            cout << "\n=== Modo paginacao ===\n";
-            while (reg.lerBinario(in)) {
-                cout << "Posicao: " << pos << " | ";
-                reg.imprimirLinha();
-                pos++;
-                contador++;
+    Registro reg;
+    int pos = 0;
 
-                if (contador == registrosPorPagina) {
-                    contador = 0;
-                    cout << "\n[ENTER] proxima pagina | [V] voltar ao menu\nEscolha: ";
-                    char c = cin.get();
+    if (opcao == 1) {
+        const int registrosPorPagina = 30;
+        int contador = 0;
 
-                    if (c == '\n') {
-                        cout << endl;
-                        continue; // próxima página
-                    } else if (c == 'V' || c == 'v') {
-                        cout << "Retornando ao menu principal...\n";
-                        break; // sai e volta ao menu
-                    } else {
-                        // ignora outros e segue pra próxima página
-                        cout << endl;
-                        continue;
-                    }
+        cout << "\n=== Modo paginacao ===\n";
+        while (reg.lerBinario(in)) {
+            cout << "Posicao: " << pos << " | ";
+            reg.imprimirLinha();
+            pos++;
+            contador++;
+
+            if (contador == registrosPorPagina) {
+                contador = 0;
+                cout << "\n[ENTER] proxima pagina | [V] voltar ao menu\nEscolha: ";
+
+                char escolha = cin.get();
+                while (cin.get() != '\n'); // limpa buffer
+
+                if (escolha == 'V' || escolha == 'v') {
+                    cout << "Retornando ao menu...\n";
+                    break;
                 }
             }
-        } else if (opcao == 2) {
-            cout << "\n=== Exibindo todos os registros ===\n";
-            while (reg.lerBinario(in)) {
-                cout << "Posicao: " << pos << " | ";
-                reg.imprimirLinha();
-                pos++;
-            }
-            cout << "\nPressione ENTER para voltar ao menu...";
-            cin.get();
         }
 
-        if (pos == 0) {
-            cout << "Arquivo esta vazio." << endl;
+    } else if (opcao == 2) {
+        cout << "\n=== Exibindo todos os registros ===\n";
+        while (reg.lerBinario(in)) {
+            cout << "Posicao: " << pos << " | ";
+            reg.imprimirLinha();
+            pos++;
         }
 
-        in.close();
+        cout << "\nPressione ENTER para voltar ao menu...";
+        while (cin.get() != '\n'); // espera ENTER
     }
+
+    if (pos == 0) {
+        cout << "Arquivo esta vazio.\n";
+    }
+
+    in.close();
 }
 
 
