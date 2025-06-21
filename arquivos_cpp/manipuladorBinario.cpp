@@ -158,17 +158,28 @@ void manipuladorBinario::imprimirTodos() {
     if (sucesso) {
         Registro reg;
         int pos = 0;
+        int registrosPorPagina = 30;
+        int contador = 0;
 
-        reg.lerBinario(in);
-        while (in) {
+        while (reg.lerBinario(in)) {
             cout << "Posição: " << pos << " | ";
             reg.imprimirLinha();
             pos++;
-            reg.lerBinario(in);
-        }
-    }
+            contador++;
 
-    if (in.is_open()) {
+            if (contador == registrosPorPagina) {
+                contador = 0;
+                cout << "\nPressione ENTER para continuar...";
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cin.get();
+                cout << endl;
+            }
+        }
+
+        if (pos == 0) {
+            cout << "Arquivo está vazio." << endl;
+        }
+
         in.close();
     }
 }
