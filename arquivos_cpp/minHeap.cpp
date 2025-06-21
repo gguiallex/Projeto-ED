@@ -1,37 +1,50 @@
 #include "minheap.h"
 
 
-MinHeap::MinHeap() : tamanho(0) {}
+using namespace std;
+
+MinHeap::MinHeap() {
+    tamanho = 0;
+}
+
+int MinHeap::pai(int i) {
+    return (i - 1) / 2;
+}
+
+int MinHeap::esquerdo(int i) {
+    return 2 * i + 1;
+}
+
+int MinHeap::direito(int i) {
+    return 2 * i + 2;
+}
 
 void MinHeap::corrigeSubindo(int i) {
-    while (i > 0) {
-        int pai = (i - 1) / 2;
-        if (dados[i].reg.id < dados[pai].reg.id) {
-            std::swap(dados[i], dados[pai]);
-            i = pai;
-        } else {
-            break;
+    if (i > 0) {
+        int p = pai(i);
+        if (strcmp(dados[i].reg.esporte, dados[p].reg.esporte) < 0) {
+            swap(dados[i], dados[p]);
+            corrigeSubindo(p);
         }
     }
 }
 
 void MinHeap::corrigeDescendo(int i) {
-    while (2 * i + 1 < tamanho) {
-        int filhoEsq = 2 * i + 1;
-        int filhoDir = 2 * i + 2;
-        int menor = i;
+    int esq = esquerdo(i);
+    int dir = direito(i);
+    int menor = i;
 
-        if (filhoEsq < tamanho && dados[filhoEsq].reg.id < dados[menor].reg.id)
-            menor = filhoEsq;
-        if (filhoDir < tamanho && dados[filhoDir].reg.id < dados[menor].reg.id)
-            menor = filhoDir;
+    if (esq < tamanho && strcmp(dados[esq].reg.esporte, dados[menor].reg.esporte) < 0) {
+        menor = esq;
+    }
 
-        if (menor != i) {
-            std::swap(dados[i], dados[menor]);
-            i = menor;
-        } else {
-            break;
-        }
+    if (dir < tamanho && strcmp(dados[dir].reg.esporte, dados[menor].reg.esporte) < 0) {
+        menor = dir;
+    }
+
+    if (menor != i) {
+        swap(dados[i], dados[menor]);
+        corrigeDescendo(menor);
     }
 }
 
@@ -40,12 +53,15 @@ void MinHeap::inserir(const HeapItem& item) {
         dados[tamanho] = item;
         corrigeSubindo(tamanho);
         tamanho++;
+    } else {
+        cerr << "Erro: heap cheio ao inserir." << endl;
     }
 }
 
 HeapItem MinHeap::extrairMinimo() {
     HeapItem raiz = dados[0];
-    dados[0] = dados[--tamanho];
+    dados[0] = dados[tamanho - 1];
+    tamanho--;
     corrigeDescendo(0);
     return raiz;
 }

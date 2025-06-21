@@ -1,9 +1,8 @@
 #ifndef MINHEAP_H
 #define MINHEAP_H
 
-#include "manipuladorBinario.h"
 #include "registro.h"
-
+#include "manipuladorBinario.h" 
 
 struct HeapItem {
     Registro reg;
@@ -15,6 +14,9 @@ private:
     HeapItem dados[MAX_HEAP];
     int tamanho;
 
+    inline int pai(int i);
+    inline int esquerdo(int i);
+    inline int direito(int i);
     void corrigeSubindo(int i);
     void corrigeDescendo(int i);
 
