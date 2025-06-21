@@ -24,7 +24,7 @@ public:
     void inserir(int posicao);
     void visualizarEntre();
     void imprimirTodos();
-    void converterCsvParaBinario(char *nomeCsv, const char *nomeBinario); 
+    void converterCsvParaBinario(const char *nomeCsv, const char *nomeBinario); 
     void ordenarMergeMultiway(int bufferSize = MAX_BUFFER);
 };
 

@@ -1,5 +1,5 @@
 #include <iostream>
-#include "manipuladorBinario.h"
+#include "../cabecalhos/manipuladorBinario.h"
 
 
 using namespace std;
@@ -9,17 +9,17 @@ using namespace std;
 void Menu()
 {
     cout << "\n=====================================\n";
-    cout << "        MENU DE OPÇÕES\n";
+    cout << "        MENU DE OPCOES\n";
     cout << "=====================================\n";
     cout << " 1 - Inserir Registro\n";
     cout << " 2 - Visualizar Entre\n";
     cout << " 3 - Alterar Registro\n";
-    cout << " 4 - Trocar Posição\n";
+    cout << " 4 - Trocar Posicao\n";
     cout << " 5 - Ordenar Arquivo\n";
     cout << " 6 - Imprimir Todos os Registros\n";
     cout << " 0 - Encerrar o Programa\n";
     cout << "=====================================\n";
-    cout << "Escolha uma opção: ";
+    cout << "Escolha uma opcao: ";
 }
 
 int main()
@@ -39,7 +39,7 @@ int main()
         case 1:
         {
             int pos;
-            cout << "Informe a posição para inserir: ";
+            cout << "Informe a posicao para inserir: ";
             cin >> pos;
             m.inserir(pos);
             break;
@@ -52,7 +52,7 @@ int main()
         case 3:
         {
             int pos;
-            cout << "Informe a posição do registro que deseja alterar: ";
+            cout << "Informe a posicaoo do registro que deseja alterar: ";
             cin >> pos;
             Registro novo;
             novo.lerTeclado(); 
@@ -62,9 +62,9 @@ int main()
         case 4:
         {
             int pos1, pos2;
-            cout << "Informe a primeira posição: ";
+            cout << "Informe a primeira posicao: ";
             cin >> pos1;
-            cout << "Informe a segunda posição: ";
+            cout << "Informe a segunda posicao: ";
             cin >> pos2;
             m.trocarRegistros(pos1, pos2);
             break;
@@ -83,7 +83,7 @@ int main()
             cout << "Encerrando o programa...\n";
             break;
         default:
-            cout << "Opção inválida. Tente novamente.\n";
+            cout << "Opcao invalida. Tente novamente.\n";
         }
     } while (numero != 0);
 

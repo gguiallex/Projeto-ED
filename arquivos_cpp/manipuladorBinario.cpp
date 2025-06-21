@@ -1,5 +1,6 @@
 #include "manipuladorBinario.h"
 #include "minHeap.h"
+#include <limits>
 
 manipuladorBinario::manipuladorBinario(string nome) {
     nomeArquivo = nome;
@@ -10,7 +11,7 @@ void manipuladorBinario::alterarRegistroNaPosicao(int posicao, const Registro &n
 
     fstream arquivo(nomeArquivo.c_str(), ios::in | ios::out | ios::binary);
     if (!arquivo.is_open()) {
-        cerr << "Erro ao abrir o arquivo binário para alteração!" << endl;
+        cerr << "Erro ao abrir o arquivo binario para alteracao!" << endl;
         sucesso = false;
     }
 
@@ -27,7 +28,7 @@ void manipuladorBinario::trocarRegistros(int pos1, int pos2) {
     bool sucesso = true;
     fstream arquivo(nomeArquivo.c_str(), ios::in | ios::out | ios::binary);
     if (!arquivo.is_open()) {
-        cerr << "Erro ao abrir o arquivo binário para troca!" << endl;
+        cerr << "Erro ao abrir o arquivo binario para troca!" << endl;
         sucesso = false;
     }
 
@@ -58,7 +59,7 @@ void manipuladorBinario::inserir(int posicao) {
 
     fstream arquivo(nomeArquivo.c_str(), ios::in | ios::out | ios::binary);
     if (!arquivo.is_open()) {
-        cerr << "Erro ao abrir o arquivo binário para inserção!" << endl;
+        cerr << "Erro ao abrir o arquivo binario para insercao!" << endl;
         sucesso = false;
     }
 
@@ -71,7 +72,7 @@ void manipuladorBinario::inserir(int posicao) {
     }
 
     if (posicao < 0 || posicao > numRegistros) {
-        cout << "Posição inválida. A posição deve estar entre 0 e " << numRegistros << "." << endl;
+        cout << "Posicao invalida. A posicao deve estar entre 0 e " << numRegistros << "." << endl;
         arquivo.close();
         sucesso = false;
     }
@@ -95,7 +96,7 @@ void manipuladorBinario::inserir(int posicao) {
 
         arquivo.seekp(posicao * Registro::tamanho(), ios::beg);
         novoRegistro.escreverBinario(arquivo);
-        cout << "Registro inserido na posição " << posicao << " com sucesso." << endl;
+        cout << "Registro inserido na posicao " << posicao << " com sucesso." << endl;
     }
 }
     }
@@ -107,19 +108,19 @@ void manipuladorBinario::visualizarEntre() {
     bool sucesso = true;
     ifstream in(nomeArquivo.c_str(), ios::binary);
     if (!in) {
-        cerr << "Erro ao abrir o arquivo binário." << endl;
+        cerr << "Erro ao abrir o arquivo binario." << endl;
         sucesso = false;
     }
 
     int inicio = 0, fim = 0;
     if (sucesso) {
-        cout << "Digite a posição inicial (0-based): ";
+        cout << "Digite a posicao inicial (0-based): ";
         cin >> inicio;
-        cout << "Digite a posição final: ";
+        cout << "Digite a posicao final: ";
         cin >> fim;
 
         if (inicio > fim || inicio < 0) {
-            cout << "Intervalo inválido!" << endl;
+            cout << "Intervalo invalido!" << endl;
             sucesso = false;
         }
     }
@@ -130,7 +131,7 @@ void manipuladorBinario::visualizarEntre() {
 
         while (in.read((char *)&reg, Registro::tamanho()) && posAtual <= fim) {
             if (posAtual >= inicio) {
-                cout << "Posição: " << posAtual << " | ";
+                cout << "Posicao: " << posAtual << " | ";
                 reg.imprimirLinha();
             }
             posAtual++;
@@ -151,33 +152,63 @@ void manipuladorBinario::imprimirTodos() {
     bool sucesso = true;
     ifstream in(nomeArquivo.c_str(), ios::binary);
     if (!in.is_open()) {
-        cerr << "Erro ao abrir o arquivo binário." << endl;
+        cerr << "Erro ao abrir o arquivo binario." << endl;
         sucesso = false;
     }
 
     if (sucesso) {
+        cout << "Deseja exibir:\n1 - Por partes\n2 - Tudo\n0 - Voltar ao menu\nEscolha: ";
+        int opcao;
+        cin >> opcao;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // limpa buffer
+
+        if (opcao == 0) return;
+
         Registro reg;
         int pos = 0;
-        int registrosPorPagina = 30;
-        int contador = 0;
 
-        while (reg.lerBinario(in)) {
-            cout << "Posição: " << pos << " | ";
-            reg.imprimirLinha();
-            pos++;
-            contador++;
+        if (opcao == 1) {
+            int registrosPorPagina = 30;
+            int contador = 0;
 
-            if (contador == registrosPorPagina) {
-                contador = 0;
-                cout << "\nPressione ENTER para continuar...";
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                cin.get();
-                cout << endl;
+            cout << "\n=== Modo paginacao ===\n";
+            while (reg.lerBinario(in)) {
+                cout << "Posicao: " << pos << " | ";
+                reg.imprimirLinha();
+                pos++;
+                contador++;
+
+                if (contador == registrosPorPagina) {
+                    contador = 0;
+                    cout << "\n[ENTER] proxima pagina | [V] voltar ao menu\nEscolha: ";
+                    char c = cin.get();
+
+                    if (c == '\n') {
+                        cout << endl;
+                        continue; // próxima página
+                    } else if (c == 'V' || c == 'v') {
+                        cout << "Retornando ao menu principal...\n";
+                        break; // sai e volta ao menu
+                    } else {
+                        // ignora outros e segue pra próxima página
+                        cout << endl;
+                        continue;
+                    }
+                }
             }
+        } else if (opcao == 2) {
+            cout << "\n=== Exibindo todos os registros ===\n";
+            while (reg.lerBinario(in)) {
+                cout << "Posicao: " << pos << " | ";
+                reg.imprimirLinha();
+                pos++;
+            }
+            cout << "\nPressione ENTER para voltar ao menu...";
+            cin.get();
         }
 
         if (pos == 0) {
-            cout << "Arquivo está vazio." << endl;
+            cout << "Arquivo esta vazio." << endl;
         }
 
         in.close();
@@ -185,7 +216,7 @@ void manipuladorBinario::imprimirTodos() {
 }
 
 
-void manipuladorBinario::converterCsvParaBinario(char* nomeCsv,const char* nomeBinario) {
+void manipuladorBinario::converterCsvParaBinario(const char* nomeCsv,const char* nomeBinario) {
     ifstream csv(nomeCsv);
     ofstream bin(nomeBinario, ios::binary);
     bool sucesso = true;
@@ -240,7 +271,7 @@ void manipuladorBinario::converterCsvParaBinario(char* nomeCsv,const char* nomeB
     r.escreverBinario(bin);
     
 }
-    cout<<"Conversão de CSV para binário executada com sucesso!"<<endl;
+    cout<<"Conversao de CSV para binario executada com sucesso!"<<endl;
 }
 }
 
@@ -249,7 +280,7 @@ void manipuladorBinario::ordenarMergeMultiway(int bufferSize) {
 
     ifstream in(nomeArquivo.c_str(), ios::binary);
     if (!in.is_open()) {
-        cerr << "Erro ao abrir arquivo binário de entrada!" << endl;
+        cerr << "Erro ao abrir arquivo binario de entrada!" << endl;
         sucesso = false;
     }
 
@@ -287,7 +318,7 @@ void manipuladorBinario::ordenarMergeMultiway(int bufferSize) {
                     out.close();
                     totalRuns++;
                 } else {
-                    cerr << "Erro ao criar arquivo temporário." << endl;
+                    cerr << "Erro ao criar arquivo temporario." << endl;
                     sucesso = false;
                 }
             }
@@ -298,7 +329,7 @@ void manipuladorBinario::ordenarMergeMultiway(int bufferSize) {
     const char* tempSaida = "ordenado_temp.bin";
     ofstream saida(tempSaida, ios::binary);
     if (!saida.is_open()) {
-        cerr << "Erro ao criar arquivo temporário de saída!" << endl;
+        cerr << "Erro ao criar arquivo temporario de saida!" << endl;
         sucesso = false;
     }
 
@@ -341,12 +372,12 @@ void manipuladorBinario::ordenarMergeMultiway(int bufferSize) {
         }
 
         if (rename(tempSaida, nomeArquivo.c_str()) != 0) {
-            cerr << "Erro ao renomear arquivo temporário para nome original!" << endl;
+            cerr << "Erro ao renomear arquivo temporario para nome original!" << endl;
             sucesso = false;
         }
     }
 
     if (sucesso) {
-        cout << "Ordenação finalizada. Arquivo '" << nomeArquivo << "' sobrescrito com os dados ordenados." << endl;
+        cout << "Ordenacao finalizada. Arquivo '" << nomeArquivo << "' sobrescrito com os dados ordenados." << endl;
     }
 }
