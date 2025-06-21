@@ -418,7 +418,7 @@ void manipuladorBinario::imprimirTodos() {
         leituraOk = false;
     }
 
-    const int registrosPorPagina = 10;
+    const int registrosPorPagina = 20;
     int contador = 0;
 
     if (leituraOk) {
