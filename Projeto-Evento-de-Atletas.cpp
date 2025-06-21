@@ -418,16 +418,28 @@ void manipuladorBinario::imprimirTodos() {
         leituraOk = false;
     }
 
+    const int registrosPorPagina = 10;
+    int contador = 0;
+
     if (leituraOk) {
         Registro reg;
         int pos = 0;
 
     reg.lerBinario(in);
-    while (in) {
+    while (reg.lerBinario(in)) {
         cout << "Posicao: " << pos << " | ";
         reg.imprimirLinha();
         pos++;
-        reg.lerBinario(in);
+        contador++;
+
+        if (contador == registrosPorPagina){
+            contador = 0;
+            cout << "\nPressione ENTER para continuar...";
+            cin.ignore();
+            cin.get();
+            cout <<"\n";
+        }
+        //reg.lerBinario(in);
         }
 
     
