@@ -161,7 +161,7 @@ void manipuladorBinario::imprimirTodos() {
         cout << "Deseja exibir:\n1 - Por partes\n2 - Tudo\n0 - Voltar ao menu\nEscolha: ";
         cin >> opcao;
 
-        // Limpa buffer após entrada inválida ou sobras
+        // Limpa buffer após leitura
         cin.clear();
         while (cin.get() != '\n'); // consome até o ENTER
 
@@ -192,14 +192,19 @@ void manipuladorBinario::imprimirTodos() {
 
             if (contador == registrosPorPagina) {
                 contador = 0;
+
                 cout << "\n[ENTER] proxima pagina | [V] voltar ao menu\nEscolha: ";
+                string escolha;
+                getline(cin, escolha);
 
-                char escolha = cin.get();
-                while (cin.get() != '\n'); // limpa buffer
-
-                if (escolha == 'V' || escolha == 'v') {
+                if (escolha == "V" || escolha == "v") {
                     cout << "Retornando ao menu...\n";
                     break;
+                } else if (escolha == "") {
+                    // Apenas ENTER → continua
+                    cout << endl;
+                } else {
+                    cout << "Entrada nao reconhecida. Continuando...\n\n";
                 }
             }
         }
@@ -213,7 +218,8 @@ void manipuladorBinario::imprimirTodos() {
         }
 
         cout << "\nPressione ENTER para voltar ao menu...";
-        while (cin.get() != '\n'); // espera ENTER
+        string espera;
+        getline(cin, espera);
     }
 
     if (pos == 0) {
