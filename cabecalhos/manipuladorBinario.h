@@ -9,7 +9,7 @@
 
 using namespace std;
 
-const int MAX_RUNS = 100;
+const int MAX_RUNS = 300;
 const int MAX_HEAP = MAX_RUNS;
 const int MAX_BUFFER = 1000;
 
@@ -25,7 +25,8 @@ public:
     void visualizarEntre();
     void imprimirTodos();
     void converterCsvParaBinario(char *nomeCsv, const char *nomeBinario); 
-    void ordenarMergeMultiway(const string& nomeSaida, int bufferSize = MAX_BUFFER);
+    void ordenarMergeMultiway(int bufferSize = MAX_BUFFER);
 };
 
 #endif
+

@@ -150,133 +150,168 @@ void manipuladorBinario::imprimirTodos() {
     in.close();
 }
 
-void manipuladorBinario::converterCsvParaBinario(char *nomeCsv, const char *nomeBinario) {
+void manipuladorBinario::converterCsvParaBinario(char* nomeCsv,const char* nomeBinario) {
     ifstream csv(nomeCsv);
     ofstream bin(nomeBinario, ios::binary);
+    bool sucesso = true;
+
     if (!csv || !bin) {
         cout << "Erro ao abrir os arquivos." << endl;
-        return;
+        sucesso = false;
     }
+
+    if(sucesso){
 
     string linha;
-    getline(csv, linha); // Pula cabeçalho
+    getline(csv, linha); 
 
     while (getline(csv, linha)) {
-        string campos[6];
-        int campoAtual = 0;
-        string campoTemporario = "";
-        bool dentroDeAspas = false;
+    string campos[6];
+    int campoAtual = 0;
+    string campoTemporario = "";
+    bool dentroDeAspas = false;
 
-        for (size_t i = 0; i < linha.length(); i++) {
-            char c = linha[i];
-            if (c == '"') {
-                dentroDeAspas = !dentroDeAspas;
-                campoTemporario += c;
-            } else if (c == ',' && !dentroDeAspas && campoAtual < 5) {
-                campos[campoAtual++] = campoTemporario;
-                campoTemporario = "";
-            } else {
-                campoTemporario += c;
-            }
+    for (size_t i = 0; i < linha.length(); i++) {
+        char c = linha[i];
+
+        if (c == '"') {
+            dentroDeAspas = !dentroDeAspas; 
+            campoTemporario += c; 
+        } else if (c == ',' && !dentroDeAspas && campoAtual < 5) {
+            campos[campoAtual++] = campoTemporario;
+            campoTemporario = "";
+        } else {
+            campoTemporario += c;
         }
-        campos[5] = campoTemporario;
-
-        Registro r;
-        r.id = stoi(campos[0]);
-
-        memset(r.nome, 0, sizeof(r.nome));
-        memset(r.cidade, 0, sizeof(r.cidade));
-        memset(r.esporte, 0, sizeof(r.esporte));
-        memset(r.evento, 0, sizeof(r.evento));
-        memset(r.nacionalidade, 0, sizeof(r.nacionalidade));
-
-        strncpy(r.nome, campos[1].c_str(), sizeof(r.nome) - 1);
-        strncpy(r.cidade, campos[2].c_str(), sizeof(r.cidade) - 1);
-        strncpy(r.esporte, campos[3].c_str(), sizeof(r.esporte) - 1);
-        strncpy(r.evento, campos[4].c_str(), sizeof(r.evento) - 1);
-        strncpy(r.nacionalidade, campos[5].c_str(), sizeof(r.nacionalidade) - 1);
-
-        r.escreverBinario(bin);
     }
+
+    campos[5] = campoTemporario; 
+
+    Registro r;
+    r.id = stoi(campos[0]);
+
+    memset(r.nome, 0, sizeof(r.nome));
+    memset(r.cidade, 0, sizeof(r.cidade));
+    memset(r.esporte, 0, sizeof(r.esporte));
+    memset(r.evento, 0, sizeof(r.evento));
+    memset(r.nacionalidade, 0, sizeof(r.nacionalidade));
+
+    strncpy(r.nome, campos[1].c_str(), sizeof(r.nome) - 1);
+    strncpy(r.cidade, campos[2].c_str(), sizeof(r.cidade) - 1);
+    strncpy(r.esporte, campos[3].c_str(), sizeof(r.esporte) - 1);
+    strncpy(r.evento, campos[4].c_str(), sizeof(r.evento) - 1);
+    strncpy(r.nacionalidade, campos[5].c_str(), sizeof(r.nacionalidade) - 1);
+
+    r.escreverBinario(bin);
+    
+}
+    cout<<"Conversão de CSV para binário executada com sucesso!"<<endl;
+}
 }
 
-void manipuladorBinario::ordenarMergeMultiway(const string& nomeSaida, int bufferSize) {
+void manipuladorBinario::ordenarMergeMultiway(int bufferSize) {
+    bool sucesso = true;
+
     ifstream in(nomeArquivo.c_str(), ios::binary);
-    if (!in) {
+    if (!in.is_open()) {
         cerr << "Erro ao abrir arquivo binário de entrada!" << endl;
-        return;
+        sucesso = false;
     }
 
     char nomesTemporarios[MAX_RUNS][20];
     int totalRuns = 0;
 
-    while (!in.eof()) {
-        Registro buffer[MAX_BUFFER];
-        int lidos = 0;
-        Registro temp;
+    if (sucesso) {
+        while (!in.eof() && totalRuns < MAX_RUNS) {
+            Registro buffer[MAX_BUFFER];
+            int lidos = 0;
+            Registro temp;
 
-        while (lidos < bufferSize && temp.lerBinario(in)) {
-            buffer[lidos++] = temp;
-        }
-
-        if (lidos == 0) break;
-
-        // Ordenação simples por inserção
-        for (int i = 1; i < lidos; ++i) {
-            Registro chave = buffer[i];
-            int j = i - 1;
-            while (j >= 0 && buffer[j].obterId() > chave.obterId()) {
-                buffer[j + 1] = buffer[j];
-                j--;
+            while (lidos < bufferSize && temp.lerBinario(in)) {
+                buffer[lidos++] = temp;
             }
-            buffer[j + 1] = chave;
+
+            if (lidos > 0) {
+                // Ordenação por inserção pelo campo esporte
+                for (int i = 1; i < lidos; ++i) {
+                    Registro chave = buffer[i];
+                    int j = i - 1;
+                    while (j >= 0 && strcmp(buffer[j].esporte, chave.esporte) > 0) {
+                        buffer[j + 1] = buffer[j];
+                        j--;
+                    }
+                    buffer[j + 1] = chave;
+                }
+
+                sprintf(nomesTemporarios[totalRuns], "run%d.bin", totalRuns);
+                ofstream out(nomesTemporarios[totalRuns], ios::binary);
+                if (out.is_open()) {
+                    for (int i = 0; i < lidos; ++i) {
+                        buffer[i].escreverBinario(out);
+                    }
+                    out.close();
+                    totalRuns++;
+                } else {
+                    cerr << "Erro ao criar arquivo temporário." << endl;
+                    sucesso = false;
+                }
+            }
+        }
+        in.close();
+    }
+
+    const char* tempSaida = "ordenado_temp.bin";
+    ofstream saida(tempSaida, ios::binary);
+    if (!saida.is_open()) {
+        cerr << "Erro ao criar arquivo temporário de saída!" << endl;
+        sucesso = false;
+    }
+
+    if (sucesso) {
+        MinHeap heap;
+        ifstream arquivos[MAX_RUNS];
+
+        for (int i = 0; i < totalRuns; ++i) {
+            arquivos[i].open(nomesTemporarios[i], ios::binary);
+            Registro r;
+            if (arquivos[i].is_open() && r.lerBinario(arquivos[i])) {
+                HeapItem item = {r, i};
+                heap.inserir(item);
+            }
         }
 
-        sprintf(nomesTemporarios[totalRuns], "run%d.bin", totalRuns);
-        ofstream out(nomesTemporarios[totalRuns], ios::binary);
-        for (int i = 0; i < lidos; ++i) {
-            buffer[i].escreverBinario(out);
+        while (!heap.vazio()) {
+            HeapItem menor = heap.extrairMinimo();
+            menor.reg.escreverBinario(saida);
+
+            Registro proximo;
+            if (arquivos[menor.origem].is_open() && proximo.lerBinario(arquivos[menor.origem])) {
+                HeapItem item = {proximo, menor.origem};
+                heap.inserir(item);
+            }
         }
-        out.close();
-        totalRuns++;
-    }
-    in.close();
 
-    ofstream saida(nomeSaida.c_str(), ios::binary);
-    if (!saida) {
-        cerr << "Erro ao abrir arquivo de saída!" << endl;
-        return;
-    }
-
-    MinHeap heap;
-    ifstream arquivos[MAX_RUNS];
-
-    for (int i = 0; i < totalRuns; ++i) {
-        arquivos[i].open(nomesTemporarios[i], ios::binary);
-        Registro r;
-        if (arquivos[i].is_open() && r.lerBinario(arquivos[i])) {
-            HeapItem item = {r, i};
-            heap.inserir(item);
+        for (int i = 0; i < totalRuns; ++i) {
+            if (arquivos[i].is_open()) arquivos[i].close();
+            remove(nomesTemporarios[i]);
         }
+
+        saida.close();
     }
 
-    while (!heap.vazio()) {
-        HeapItem menor = heap.extrairMinimo();
-        menor.reg.escreverBinario(saida);
+    if (sucesso) {
+        if (remove(nomeArquivo.c_str()) != 0) {
+            cerr << "Erro ao remover arquivo original!" << endl;
+            sucesso = false;
+        }
 
-        Registro proximo;
-        if (arquivos[menor.origem].is_open() && proximo.lerBinario(arquivos[menor.origem])) {
-            HeapItem item = {proximo, menor.origem};
-            heap.inserir(item);
+        if (rename(tempSaida, nomeArquivo.c_str()) != 0) {
+            cerr << "Erro ao renomear arquivo temporário para nome original!" << endl;
+            sucesso = false;
         }
     }
 
-    for (int i = 0; i < totalRuns; ++i) {
-        if (arquivos[i].is_open()) arquivos[i].close();
-        remove(nomesTemporarios[i]);
+    if (sucesso) {
+        cout << "Ordenação finalizada. Arquivo '" << nomeArquivo << "' sobrescrito com os dados ordenados." << endl;
     }
-
-    saida.close();
-    cout << "Ordenação finalizada. Arquivo gerado: " << nomeSaida << endl;
 }
-
