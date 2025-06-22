@@ -5,6 +5,7 @@
 using namespace std;
 
 
+// Exibe o menu de opções para o usuário.
 
 void Menu()
 {
@@ -22,6 +23,7 @@ void Menu()
     cout << "Escolha uma opcao: ";
 }
 
+// Ponto de entrada da aplicação; controla o fluxo do programa.
 int main()
 {
     manipuladorBinario m("dados1.bin");

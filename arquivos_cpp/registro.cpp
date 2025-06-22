@@ -1,5 +1,7 @@
 #include "registro.h"
 
+//Inicializa um registro com os dados fornecidos.
+
 Registro::Registro(int i, const char *n, const char *c, const char *e, const char *ev, const char *na) {
     id = i;
     strncpy(nome, n, sizeof(nome));
@@ -15,6 +17,8 @@ Registro::Registro(int i, const char *n, const char *c, const char *e, const cha
     nacionalidade[sizeof(nacionalidade) - 1] = '\0';
 }
 
+//Grava o registro no formato binário em um stream.
+
 void Registro::escreverBinario(ostream &out) const {
     out.write((char *)&id, sizeof(id));
     out.write(nome, sizeof(nome));
@@ -23,6 +27,8 @@ void Registro::escreverBinario(ostream &out) const {
     out.write(evento, sizeof(evento));
     out.write(nacionalidade, sizeof(nacionalidade));
 }
+
+//Lê os dados do registro a partir de um stream binário.
 
 bool Registro::lerBinario(istream &in) {
     in.read((char *)&id, sizeof(id));
@@ -34,6 +40,8 @@ bool Registro::lerBinario(istream &in) {
     return in.gcount() > 0;
 }
 
+//Mostra os dados do registro formatados no terminal.
+
 void Registro::imprimirLinha() const {
     cout << "ID: " << id << " | "
          << "Nome: " << nome << " | "
@@ -42,6 +50,8 @@ void Registro::imprimirLinha() const {
          << "Evento: " << evento << " | "
          << "Nacionalidade: " << nacionalidade << endl;
 }
+
+//Lê os dados de um registro diretamente do usuário.
 
 void Registro::lerTeclado() {
     cout << "Digite o ID: ";
@@ -59,6 +69,8 @@ void Registro::lerTeclado() {
     cout << "Nacionalidade: ";
     cin.getline(nacionalidade, 10);
 }
+
+//Retorna o tamanho fixo em bytes de um registro.
 
 int Registro::tamanho() {
     return sizeof(int) + sizeof(nome) + sizeof(cidade) + sizeof(esporte) + sizeof(evento) + sizeof(nacionalidade);

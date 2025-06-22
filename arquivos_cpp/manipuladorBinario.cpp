@@ -5,6 +5,8 @@ manipuladorBinario::manipuladorBinario(string nome) {
     nomeArquivo = nome;
 }
 
+//Substitui um registro por outro em uma posição específica.
+
 void manipuladorBinario::alterarRegistroNaPosicao(int posicao, const Registro &novo) {
     bool sucesso = true;
 
@@ -22,6 +24,7 @@ void manipuladorBinario::alterarRegistroNaPosicao(int posicao, const Registro &n
     }
 }
 
+//Troca os registros entre duas posições no arquivo.
 
 void manipuladorBinario::trocarRegistros(int pos1, int pos2) {
     bool sucesso = true;
@@ -50,6 +53,7 @@ void manipuladorBinario::trocarRegistros(int pos1, int pos2) {
     }
 }
 
+//Insere um novo registro em qualquer posição do arquivo.
 
 void manipuladorBinario::inserir(int posicao) {
     Registro novoRegistro;
@@ -103,6 +107,8 @@ void manipuladorBinario::inserir(int posicao) {
     arquivo.close(); 
 }
 
+//Exibe registros entre duas posições dadas.
+
 void manipuladorBinario::visualizarEntre() {
     bool sucesso = true;
     ifstream in(nomeArquivo.c_str(), ios::binary);
@@ -146,6 +152,7 @@ void manipuladorBinario::visualizarEntre() {
     }
 }
 
+//Imprime todos os registros presentes no arquivo binário.
 
 void manipuladorBinario::imprimirTodos() {
     bool sucesso = true;
@@ -236,6 +243,7 @@ void manipuladorBinario::imprimirTodos() {
 }
 
 
+// Lê um arquivo CSV e cria um arquivo binário com os dados.
 
 void manipuladorBinario::converterCsvParaBinario(const char* nomeCsv,const char* nomeBinario) {
     ifstream csv(nomeCsv);
@@ -295,6 +303,8 @@ void manipuladorBinario::converterCsvParaBinario(const char* nomeCsv,const char*
     cout<<"Conversao de CSV para binario executada com sucesso!"<<endl;
 }
 }
+
+//Ordena os registros do arquivo usando o algoritmo Merge Multiway.
 
 void manipuladorBinario::ordenarMergeMultiway(int bufferSize) {
     bool sucesso = true;

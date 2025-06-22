@@ -9,6 +9,8 @@ struct HeapItem {
     int origem;
 };
 
+// Implementa uma heap mínima manualmente (sem STL).
+
 class MinHeap {
 private:
     HeapItem dados[MAX_HEAP];

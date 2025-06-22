@@ -5,6 +5,8 @@
 #include <cstring>
 using namespace std;
 
+//Representa um atleta com campos fixos e operações de entrada/saída binária.
+
 class Registro {
     friend class manipuladorBinario;
     friend class MinHeap;

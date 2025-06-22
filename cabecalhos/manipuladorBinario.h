@@ -13,6 +13,8 @@ const int MAX_RUNS = 300;
 const int MAX_HEAP = MAX_RUNS;
 const int MAX_BUFFER = 1000;
 
+//Gerencia o arquivo binário e as operações sobre registros.
+
 class manipuladorBinario {
 private:
     string nomeArquivo;
